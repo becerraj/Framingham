@@ -1,13 +1,13 @@
-# library(readr)
 import pandas as pd
-# library(stringr)
-# library(readxl)
-# library(xlsx)
+import seaborn as sns
+import matplotlib.pyplot as plt
+import openpyxl
+
 # #CARGO DATA----
 # # Cargo el data_set
 
 data_set = pd.read_excel("/home/juan/Github/Data_Science_2023/CartagenaCohortStudy_DATA.xlsx")
-#
+
 # #EXTRACT DATA----
 tratamiento_HTA = data_set.iloc[:, 11:54]
 
@@ -19,7 +19,6 @@ for i in range(0, len(data_set)):
         hay_tratamiento.append(1)
     else:
         hay_tratamiento.append(0)
-
 # Elimino las columnas que son ttos
 indices_a_eliminar = list(range(11, 54+1)) + list(range(70, 78+1))
 data_set = data_set.drop(data_set.columns[indices_a_eliminar], axis = 1)
@@ -27,6 +26,17 @@ data_set['hay_tto'] = hay_tratamiento
 
 # Que tipos de dato tengo?
 data_set.dtypes
+# vef1_cvf_pre_por y intima_m_c_d deberian ser numericos
+data_set['intima_m_c_d'] = data_set['intima_m_c_d'].str.replace(",", ".").str.replace(r'[^0-9]', "")
+
+data_set['intima_m_c_d'] = data_set['intima_m_c_d'].astype(float)
+
+data_set['vef1_cvf_pre_por'] = (data_set['vef1_cvf_pre_por'].astype(float)
+
+# Paso los valores de gender a factores:
+mapeo = {0: 'Male', 1: 'Female'}
+data_set['gender'] = data_set['gender'].map(mapeo)
+
 
 # # Cuantos NA tengo?
 data_set.isna().sum().sum()
@@ -36,11 +46,15 @@ data_set.isna().any(axis=1).sum()
 # Que porcentaje de NA tengo en cada columna?
 data_set.isna().sum() / data_set.shape[0] * 100
 
+data_set = data_set.dropna()
+# Teniendo en cuenta que me voy a quedar sin las columnas de parametros sericos (analisis de sangre)
+# primero voy a analizar esos datos, eliminar los datos que sean outliers, y luego eliminar esas columnas
+# Despues de esto analizo los datos NA faltantes para ver como tratarlos.
+sns.boxplot(x = 'gender', y = 'dis_p', data = data_set)
+sns.boxplot(x = 'gender', y = 'dis_p', data = data_set)
 
-
-
-#
-# # Elimino las filas que tienen NA. A otra cosa jajaja
+sns.violinplot(x = 'gender', y = 'dis_p', data = data_set)
+# Elimino las filas que tienen NA. A otra cosa jajaja
 # data_set <- na.omit(data_set)
 #
 # index_F<- grep(0, data_set$gender)
