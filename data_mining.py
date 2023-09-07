@@ -9,16 +9,28 @@ import openpyxl
 data_set = pd.read_excel("/home/juan/Github/Data_Science_2023/CartagenaCohortStudy_DATA.xlsx")
 
 # #EXTRACT DATA----
-tratamiento_HTA = data_set.iloc[:, 11:54]
+tratamiento_hta = data_set.iloc[:, 11:54]
+
+hay_tratamiento = []
+hay_tratamiento = tratamiento_hta.apply(buscarUno, axis = 1)
+
+def buscarUno(tratamiento_hta):
+    if (tratamiento_hta[:] == 1).any():
+        hay_tratamiento.append(1.99881)
+    else:
+        hay_tratamiento.append(1.93303)
+    return(hay_tratamiento)
+
 
 hay_tratamiento = []
 # Tener en cuenta que la dimension real de los datos es de len(), pero su indexacion comienza en 0.
 # Entonces los range si bien no toman el ultimo valor, al quedarse con el anterior no afectan al bucle.
 for i in range(0, len(data_set)):
     if (tratamiento_HTA.iloc[i] == 1).any():
-        hay_tratamiento.append(1)
+        hay_tratamiento.append(1.99881)
     else:
         hay_tratamiento.append(0)
+
 # Elimino las columnas que son ttos
 indices_a_eliminar = list(range(11, 54+1)) + list(range(70, 78+1))
 data_set = data_set.drop(data_set.columns[indices_a_eliminar], axis = 1)
@@ -56,6 +68,54 @@ sns.boxplot(x = 'gender', y = 'dis_p', data = data_set)
 sns.violinplot(x = 'gender', y = 'dis_p', data = data_set)
 # Elimino las filas que tienen NA. A otra cosa jajaja
 # data_set <- na.omit(data_set)
+
+
+
+# hay_tto <- c()
+# for (i in (1:nrow(cols_tto_hta))) {
+#   if (1 %in% cols_tto_hta[i, ]) {
+#     hay_tto <- c(hay_tto, 1.99881)
+#   } else {
+#     hay_tto <- c(hay_tto, 1.93303)
+#   }
+# }
+
+# # Elimino las columnas que son ttos
+# data_set <- data_set[, -c(11:54, 70:78)]
+# data_set <- as.data.frame(data_set)
+# data_set <- cbind(data_set, hay_tto)
+#
+# # Que tipos de dato tengo?
+# for (i in (1:ncol(data_set))) {
+#   print(sprintf("%s: %s", colnames(data_set[i]), class(data_set[, i])))
+# }
+#
+# # Cuantos NA tengo?
+# colSums(is.na(data_set))
+#
+# # Que porcentaje de cada columna es eso?
+# # print(sprintf("%s %s",(na_counts/nrow(data_set))*100, "%"))
+#
+# # Elimino las columnas con muy alta proporcion de NA
+# # data_set <- data_set[, -c(34, 37)]
+#
+# # Para hacer boxplot + violin plot de los datos voy a sacar a las variables que no sean numericas
+# # study_id, tipo_id, gender, num_indi_vivienda_v2, ingresos,
+# data_clean <- data_set
+# data_set$study_id <- NULL
+# data_set$tipo_id <- NULL
+#
+#
+# for (i in (1:ncol(data_set))) {
+#   Value <- data_set[, i]
+#   Group <- rep(colnames(data_set)[i], nrow(data_set))
+#   grafico <- ggplot(data_set, aes(x = Group, y = Value)) +
+#     geom_violin() +
+#     geom_boxplot(width = 0.2) +
+#     labs(title = sprintf("%s", Group[1]))
+#
+#   print(grafico)
+# }
 #
 # index_F<- grep(0, data_set$gender)
 # index_M <- grep(1, data_set$gender)
@@ -87,6 +147,9 @@ sns.violinplot(x = 'gender', y = 'dis_p', data = data_set)
 # data_set$dm2_p[index_no] <- 0
 # data_set$dm2_p[index_si] <- 1
 #
+# data_set$intima_m_c_d <- as.numeric(data_set$intima_m_c_d)
+# data_set$vef1_cvf_pre_por <- as.numeric(data_set$vef1_cvf_pre_por)
+#
 # # Elimino filas segun valores outliers definidos
 # index_to_delete <- c()
 # index_to_delete <- c(which(data_set$intima_m_c_i > 5), which(data_set$hba1c > 500),
@@ -94,19 +157,9 @@ sns.violinplot(x = 'gender', y = 'dis_p', data = data_set)
 #                      which(data_set$vef1_cvf_pre_por > 300)) %>% unique() %>% sort(decreasing = TRUE)
 # data_set <- data_set[-c(index_to_delete), ]
 #
-# # columnas iniciales eliminadas: vivienda_hab_v22, vivienda_hab_v2, ingresos, vivienda_v2, ocupacion_op, ocupacion, escolaridad, localidad
-# data_set <- data_set[, c('age', 'gender', 'dis_p', 'hta_p', 'ecv_p', 'dm2_p', 'expo_tab_otro','imc',
-#                          'i_cin_cad', 'pre_art_sis', 'pre_art_dias', 'ctotal', 'chdl', 'cldl', 'tri', 'gli', 'hba1c', 'cvf_pre_por',
-#                          'vef1_cvf_pre_por', 'intima_m_c_d', 'intima_m_c_i', 'placas_atero', 'hay_tto')]
-#
 #
 # #ANALISIS----
-# ## FORMULA 1 ----
-# #mu <- 15.5305 + 28.441 * data_set$gender - 1.4792 * log(data_set$age) - 14.4588 * data_set$gender * log(data_set$age) + 1.8515 * data_set$gender * (log(data_set$age))^2 - 0.9119 * log(data_set$pre_art_sis) - 0.2767 * data_set$expo_tab_otro - 0.7181 * log(data_set$ctotal / data_set$chdl) - 0.1759 * data_set$dm2_p - 0.1999 * data_set$dm2_p *data_set$gender
-# #sigma <- exp(0.9145 - (0.2784 * mu))
-# #porcentaje_10_anios <- (1- exp(-log(10) - mu) / sigma) * 100
-#
-# ## FORMULA 2 ----
+# ## FORMULA ----
 # # Factores de riesgo = (ln(Edad) * 3.06117) + (ln(Colesterol total) * 1.12370) - (ln(Colesterol HDL) * 0.93263) + (ln(TA sistólica) * Factor TA sis) + Cig + DM - 23.9802
 # factores_de_riesgo <- (log(data_set$age) * 3.06117) + (log(data_set$ctotal) * 1.12370) - (log(data_set$chdl) * 0.93263) + (log(data_set$pre_art_sis) * data_set$hay_tto) + data_set$expo_tab_otro + data_set$dm2_p - 23.9802
 # riesgo = 100 * (1 - 0.88936^ exp(factores_de_riesgo))
@@ -116,42 +169,58 @@ sns.violinplot(x = 'gender', y = 'dis_p', data = data_set)
 # data_set <- cbind(data_set, riesgo)
 # data_set$hay_tto <- NULL
 #
-# data_set$intima_m_c_d <- as.numeric(data_set$intima_m_c_d)
-# data_set$vef1_cvf_pre_por <- as.numeric(data_set$vef1_cvf_pre_por)
+# cols_data_set_no_pulm <- c('age','gender','dis_p_act','hta_p','ecv_p','dm2_p', 'expo_tab_otro','imc',
+#                            'i_cin_cad', 'pre_art_sis','pre_art_dias', 'intima_m_c_d','intima_m_c_i',
+#                            'placas_atero', 'riesgo')
+#
+# data_set <- data_set[, cols_data_set_no_pulm]
+#
+# # Elimino las filas que tienen NA. A otra cosa jajaja
+# data_set <- na.omit(data_set)
+#
+# # Transformacion de los datos. Busco transformar el riesgo
+# Value <- data_set$riesgo
+# Group <- rep("riesgo", nrow(data_set))
+# grafico <- ggplot(data_set, aes(x = Group, y = Value)) +
+#   geom_violin() +
+#   geom_boxplot(width = 0.2) +
+#   labs(title = sprintf("%s", Group[1]))
+#
+# print(grafico)
+#
+# Value <- log(data_set$riesgo + 1 - min(data_set$riesgo), base = 10)
+# Group <- rep("riesgo", nrow(data_set))
+# grafico <- ggplot(data_set, aes(x = Group, y = Value)) +
+#   geom_violin() +
+#   geom_boxplot(width = 0.2) +
+#   labs(title = sprintf("%s", Group[1]))
+#
+# print(grafico)
+#
+#
+# data_set$riesgo <- log(data_set$riesgo + 1 - min(data_set$riesgo), base = 10)
+# # Una vez con los datos transformados, hacemos el escalado y normalizado de los datos.
+# # Tener en cuenta que despues de usar la funcion scale, los datos se guardan como arrays.
+#
+# # Normalizado: min-max
+# for (i in (c(1,8,9,10,11,12,13,15))) {
+#   data_set[, i] <- (data_set[, i] - min(data_set[, i])) / (max(data_set[, i]) - min(data_set[, i]))
+# }
+#
+# # Estandarizado: Z-score
+# for (i in (c(1,8,9,10,11,12,13,15))) {
+#   data_set[, i] <- scale(data_set[, i]) %>% as.numeric()
+# }
+#
+# for (i in (1: ncol(data_set))) {
+#   Value <- data_set[, i]
+#   Group <- rep(colnames(data_set)[i], nrow(data_set))
+#   grafico <- ggplot(data_set, aes(x = Group, y = Value)) +
+#     geom_violin() +
+#     geom_boxplot(width = 0.2) +
+#     labs(title = sprintf("%s", Group[1]))
+#
+#   print(grafico)
+# }
 #
 # xlsx::write.xlsx(data_set, "/home/juan/Github/Data_Science_2023/Data_Science_2023/clean_data.xlsx", row.names = FALSE)
-#
-# # Saque columnas: 'intima_m_c_d','intima_m_c_i', 'placas_atero','cvf_pos','vef1_pos' -- Provenientes de ecografia y espirometria
-# columnas_para_framingham_1 <- c('age','expo_tab_otro','dis_p_act','hta_p','ecv_p','dm2_p','per_cin','per_cad','i_cin_cad',
-#                               'pre_art_sis','pre_art_dias','ctotal','chdl','cldl','tri','gli','hba1c','cvf_prev','vef1_prev')
-#
-# # Saque columnas: ,'ctotal','chdl','cldl','tri','gli','hba1c' -- Todas las que provienen de analisis de sangre
-# columnas_para_framingham_2 <- c('age','expo_tab_otro','dis_p_act','hta_p','ecv_p','dm2_p','per_cin','per_cad','i_cin_cad',
-#                                 'pre_art_sis','pre_art_dias','intima_m_c_d','intima_m_c_i', 'placas_atero','cvf_prev','vef1_prev',
-#                                 'cvf_pos','vef1_pos')
-#
-# # Falta agregar la etiqueta: RIESGO PULMONAR
-# # Saque columnas: 'vef1_prev','cvf_pos'
-# columnas_para_riesgo_pulmonar <- c('age','expo_tab_otro','dis_p_act','hta_p','ecv_p','dm2_p','per_cin','per_cad','i_cin_cad',
-#                                    'pre_art_sis','pre_art_dias','ctotal','chdl','cldl','tri','gli','hba1c','intima_m_c_d','intima_m_c_i',
-#                                    'placas_atero')
-#
-#
-# data_to_plot <- data.frame()
-# for (i in c(12,13,14,15,16, 17)) {
-#   data_to_add <- data.frame(Value = rep(colnames(data_set)[i], nrow(data_set)), Group = data_set[, i])
-#   data_to_plot <- rbind(data_to_plot, data_to_add)
-# }
-# colnames(data_to_plot) <- c("Value", "Group")
-#
-# ggplot(data = data_to_plot, aes(x = Value, y = Group)) +
-#   stat_boxplot(geom = "errorbar", # Bigotes
-#                width = 0.2) +
-#   geom_violin() +
-#   geom_boxplot(fill = "#4271AE", colour = "#1F3552", # Colores
-#                alpha = 0.9, outlier.colour = "red") +
-#   scale_y_continuous(name = "Value") +  # Etiqueta de la variable continua
-#   scale_x_discrete(name = "Group") +        # Etiqueta de los grupos
-#   ggtitle("Datos Cardiovasculares") +       # Título del plot
-#   theme(axis.line = element_line(colour = "black", # Personalización del tema
-#                                  size = 0.25))
