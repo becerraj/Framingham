@@ -153,34 +153,4 @@ riesgo = 100 * (1 - 0.88936 ** np.exp(factores_de_riesgo))
 data_set = data_set.drop('hay_tto', axis = 1)
 data_set['riesgo'] = riesgo
 
-# Data transformation. I'm looking to transform the risk variable.
-# Let's first visualize it graphically with a logarithmic transformation.
-fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(9, 4))
-axs[0].violinplot(riesgo,
-                  showmeans=False,
-                  showmedians=True)
-axs[0].set_title('Riesgo')
-
-# plot box plot
-axs[1].violinplot(np.log10(riesgo + 1 - riesgo.min()))
-axs[1].set_title('Riesgo Transformado')
-
-# adding horizontal grid lines
-for ax in axs:
-    ax.yaxis.grid(True)
-    ax.set_ylabel('Value')
-
-plt.show()
-
-# The graph shows that the data takes on a more normal distribution.
-# This is beneficial when building a machine learning (ML) or deep learning (DL) model.
-# We can say that the data has been cleaned and is ready for ML or DL techniques.
-# Depending on the method, we will either normalize or standardize the data.
-# This process will be found in the next respective scripts.
-
-# Using data_set.items() creates a generator.
-for col_name, col in data_set.items():
-    if col.dtype == float:
-        data_set[col_name] = estandarizado_zscore(normalizacion_minmax(col))
-
 data_set.to_excel("/home/juan/Github/Framingham/clean_data.xlsx", index=False)
